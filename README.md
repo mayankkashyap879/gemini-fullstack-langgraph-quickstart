@@ -32,7 +32,8 @@ Follow these steps to get the application running locally for development and te
 -   **`GEMINI_API_KEY`**: The backend agent requires a Google Gemini API key.
     1.  Navigate to the `backend/` directory.
     2.  Create a file named `.env` by copying the `backend/.env.example` file.
-    3.  Open the `.env` file and add your Gemini API key: `GEMINI_API_KEY="YOUR_ACTUAL_API_KEY"`
+    3.  Open the `.env` file and add your Gemini API key: `GEMINI_API_KEY="YOUR_ACTUAL_API_KEY"`.
+    4.  Optionally set additional variables such as `LANGSMITH_API_KEY` if you use LangSmith or other analytics services.
 
 **2. Install Dependencies:**
 
@@ -72,6 +73,26 @@ The core of the backend is a LangGraph agent defined in `backend/src/agent/graph
 3.  **Reflection & Knowledge Gap Analysis:** The agent analyzes the search results to determine if the information is sufficient or if there are knowledge gaps. It uses a Gemini model for this reflection process.
 4.  **Iterative Refinement:** If gaps are found or the information is insufficient, it generates follow-up queries and repeats the web research and reflection steps (up to a configured maximum number of loops).
 5.  **Finalize Answer:** Once the research is deemed sufficient, the agent synthesizes the gathered information into a coherent answer, including citations from the web sources, using a Gemini model.
+
+## Configuration
+
+Configuration values for the agent are defined in `backend/src/agent/configuration.py`.
+The defaults can be overridden via environment variables or per-request query parameters:
+
+- `query_generator_model` – model used when creating search queries (default `gemini-2.0-flash`).
+- `reflection_model` – model used for reflection and knowledge-gap analysis (default `gemini-2.5-flash-preview-04-17`).
+- `answer_model` – model used when generating the final answer (default `gemini-2.5-pro-preview-05-06`).
+- `number_of_initial_queries` / `initial_search_query_count` – how many search queries to generate initially (default `3`).
+- `max_research_loops` – maximum number of research/reflection iterations (default `2`).
+
+Environment variables are the uppercase field names, e.g. `MAX_RESEARCH_LOOPS=5`.
+Query parameters follow the same names via `configurable[max_research_loops]=5` when calling the `/graphs/agent` API.
+
+## Citation Links
+
+During web research, the agent resolves long Vertex AI Search URLs to short placeholders using `resolve_urls` and
+inserts numbered links with `insert_citation_markers`. When finalizing the answer these placeholders are replaced with the
+original URLs, ensuring that each citation in the text links to a real source.
 
 ## Deployment
 
